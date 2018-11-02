@@ -111,6 +111,8 @@ def get_issue_stats(jql):
             'lead_time_hours': None,
             'normalized_lead_time': None,
             'resolution': (issue.get('fields', {}).get('resolution') or {}).get('name'),
+            'summary': issue.get('fields', {}).get('summary'),
+            'accepted_outlier': 'ax-stats-outlier' in issue.get('fields', {}).get('labels', []),
         }
 
 

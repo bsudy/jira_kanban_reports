@@ -9,3 +9,10 @@ USER:<<username: eg. johndoe@company.com>>
 API_TOKEN:<<The generated api token>>
 ```
 * Enjoy the scripts
+
+# Jira labels
+
+Supported Jira labels:
+
+* ax-stats-outlier - to mark already accepted outliers
+

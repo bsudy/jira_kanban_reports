@@ -10,81 +10,6 @@ import jira_api
 from collections import defaultdict
 
 
-def get_issue_stats(jql):
-    
-    issues = jira_api.get_issues(jql)
-
-    counter = 0
-    for issue in issues:
-        # print '---------------------'
-        # pprint.pprint(issue)
-        counter += 1
-
-        transitions = list(jira_api.get_transitions(issue))
-        transitions = sorted(transitions, key=lambda tr: tr.get('at'))
-        
-        started = None
-        finished = None
-        back_from_finished = False
-
-        for transition in transitions:
-            # pprint.pprint(transition)
-            if transition.get('to') == 'In Progress':
-                if started == None:
-                    started = transition.get('at')
-            elif transition.get('to') == 'To Do' or transition.get('to') == 'New':
-            # or transition.get('to') == 'Input Needed':
-                if finished == None and started != None:
-                    started = None
-                elif finished != None:
-                    back_from_finished = True
-            elif transition.get('to') == 'QA':
-                back_from_finished = False
-                if started != None:
-                    finished = transition.get('at')
-            elif transition.get('to') == 'Done':
-                back_from_finished = False
-                if finished == None or back_from_finished:
-                    finished = transition.get('at')
-
-        result = {
-            'issue': issue.get('key'),
-            'link': "https://beekeeper.atlassian.net/browse/{}".format(issue.get('key')),
-            'type': issue.get('fields', {}).get('issuetype', {}).get('name'),
-            'story_points': issue.get('fields', {}).get('customfield_10005'),
-            'started': started,
-            'finished': finished if not back_from_finished else None,
-            'lead_time_hours': None,
-            'normalized_lead_time': None,
-            'resolution': (issue.get('fields', {}).get('resolution') or {}).get('name'),
-        }
-
-
-        #Business open hour
-        biz_open_time = datetime.time(9,0,0)
-
-        #Business close time
-        biz_close_time = datetime.time(18,0,0)
-        weekend_list = [5,6]
-        holidaylist = pyholidays.Switzerland()
-
-        if started != None and finished != None:
-            result['lead_time_hours'] = businessDuration(
-                startdate=started, 
-                enddate=finished, 
-                starttime=biz_open_time,
-                endtime=biz_close_time,
-                weekendlist=weekend_list,
-                holidaylist=holidaylist,
-                unit='hour')
-
-        if result.get('lead_time_hours') != None and result.get('story_points') != None and result.get('story_points') > 0:
-            result['normalized_lead_time'] = result.get('lead_time_hours') / result.get('story_points')
-
-        yield result
-
-    # print counter
-
 weekly_man_days= {
     '2018_35_default': {
         'andrei': 5,
@@ -136,7 +61,7 @@ def main():
     now = datetime.datetime.utcnow()
     now = now.replace(tzinfo=pytz.utc) # 27.08
     results = [ 
-        res for res in get_issue_stats('project = Fullstack and labels = admin-experience and labels != exclude-ax-stats and updated >= {}'.format(STATS_FROM)) 
+        res for res in jira_api.get_issue_stats('project = Fullstack and labels = admin-experience and labels != exclude-ax-stats and updated >= {}'.format(STATS_FROM)) 
         if (res.get('finished') or now) > STATS_FROM_DATE
         and res.get('resolution') != 'Cannot Reproduce'
         and res.get('type') != 'Epic'
@@ -170,9 +95,11 @@ def main():
     for res in results:
         if res.get(STAT_PARAM) != None:
             if not ((mean_lead_time - EXTREM_OUTLIER_MULTIPLIER * stdev_lead_time) < res.get(STAT_PARAM) < (mean_lead_time + EXTREM_OUTLIER_MULTIPLIER*stdev_lead_time)):
-                extreme_outliers.append(res)
+                if not res.get('accepted_outlier', False):
+                    extreme_outliers.append(res)
             elif not ((mean_lead_time - OUTLIER_MULTIPLIER  *stdev_lead_time) < res.get(STAT_PARAM) < (mean_lead_time + OUTLIER_MULTIPLIER*stdev_lead_time)):
-                outliers.append(res)
+                if not res.get('accepted_outlier', False):
+                    outliers.append(res)
             else:
                 normal_tasks.append(res)
         else:
