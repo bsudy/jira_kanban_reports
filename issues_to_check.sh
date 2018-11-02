@@ -103,7 +103,9 @@ def main():
             else:
                 normal_tasks.append(res)
         else:
-            if res.get('started') != None and res.get('story_points') is None and res.get('type') != 'Bug':
+            if res.get('started') != None \
+            and res.get('story_points') is None \
+            and (res.get('type') != 'Bug' or 'ax-estimable' in res.get('labels', [])):
                 tasks_to_check.append(res)
 
     print '------------------ BASIC STATS ---------------'
