@@ -8,6 +8,12 @@ BASE_URL:<<URL to the API endpoint. eg: https://company.atlassian.net/rest/api/2
 USER:<<username: eg. johndoe@company.com>>
 API_TOKEN:<<The generated api token>>
 ```
+
+Install the requirements listed in `requrements.txt`
+```
+pip install -r requirements.txt
+```
+
 * Enjoy the scripts
 
 # Jira labels
