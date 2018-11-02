@@ -21,4 +21,5 @@ pip install -r requirements.txt
 Supported Jira labels:
 
 * ax-stats-outlier - to mark already accepted outliers
-
+* ax-estimable - Bugs are not due to estimates by default. With this label, one can mark bigger bugs that should have been estimated.
+* exclude-ax-stats - to exclude an issue from the stats.
