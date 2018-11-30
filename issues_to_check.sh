@@ -83,8 +83,8 @@ def main():
     plot.subplot(2, 1, 2)
     plot.title('Lead time distribution')
 
-
-    normalized_lead_times = [ res.get(STAT_PARAM) for res in results if res.get(STAT_PARAM) != None ]
+    import math
+    normalized_lead_times = sorted([ res.get(STAT_PARAM) for res in results if res.get(STAT_PARAM) and (not math.isnan(res.get(STAT_PARAM))) ])
     mean_lead_time = numpy.mean(normalized_lead_times)
     stdev_lead_time = numpy.std(normalized_lead_times)
 
@@ -105,7 +105,8 @@ def main():
         else:
             if res.get('started') != None \
             and res.get('story_points') is None \
-            and (res.get('type') != 'Bug' or 'ax-estimable' in res.get('labels', [])):
+            and (res.get('type') != 'Bug' or 'ax-estimable' in res.get('labels', [])) \
+            and (res.get('type') != 'Sub-task' or 'ax-estimable' in res.get('labels', [])):
                 tasks_to_check.append(res)
 
     print '------------------ BASIC STATS ---------------'
@@ -121,11 +122,14 @@ def main():
     
 
     # import matplotlib.pyplot as plot
+    print('Min', min(normalized_lead_times))
+    print('Max', max(normalized_lead_times))
+    print(normalized_lead_times)
 
     counts, bins, bars = plot.hist(
         normalized_lead_times,
-        density=1, 
-        bins=20,
+        # density=1, 
+        bins=20
     )
 
     for patch, rightside, leftside in zip(bars, bins[1:], bins[:-1]):
