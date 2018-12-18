@@ -23,20 +23,20 @@ HEADERS={
 
 
 def get_issues(jql):
-    
+
     startAt = 0
 
     while True:
-    
+
         params={
             'jql': jql,
             'startAt': startAt,
             'expand': 'transitions,changelog',
         }
-    
+
         r = requests.get(
-            '{}{}'.format(BASE_URL, 'search'), 
-            params=params, 
+            '{}{}'.format(BASE_URL, 'search'),
+            params=params,
             headers=HEADERS,
             auth=(USER, API_TOKEN))
 
@@ -61,28 +61,25 @@ def get_transitions(issue):
                     'to': changed_item.get('toString'),
                     'at': dateutil.parser.parse(history_item.get('created'))
                 }
-                    
+
 
 
 def get_issue_stats(jql):
-    
+
     issues = get_issues(jql)
 
     counter = 0
     for issue in issues:
-        # print '---------------------'
-        # pprint.pprint(issue)
         counter += 1
 
         transitions = list(get_transitions(issue))
         transitions = sorted(transitions, key=lambda tr: tr.get('at'))
-        
+
         started = None
         finished = None
         back_from_finished = False
 
         for transition in transitions:
-            # pprint.pprint(transition)
             if transition.get('to') == 'In Progress':
                 if started == None:
                     started = transition.get('at')
@@ -127,8 +124,8 @@ def get_issue_stats(jql):
 
         if started != None and finished != None:
             result['lead_time_hours'] = businessDuration(
-                startdate=started, 
-                enddate=finished, 
+                startdate=started,
+                enddate=finished,
                 starttime=biz_open_time,
                 endtime=biz_close_time,
                 weekendlist=weekend_list,
